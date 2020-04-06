@@ -9,12 +9,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Circle;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.Rectangle;
 
 import java.util.Random;
 
 public class FlappyTrump extends ApplicationAdapter {
 	SpriteBatch batch;
-	ShapeRenderer shapeRenderer;
+//	ShapeRenderer shapeRenderer;
 	Texture background;
 	Texture topTubeMedia;
 	Texture bottomTube;
@@ -25,8 +27,14 @@ public class FlappyTrump extends ApplicationAdapter {
 	float playerX;
 	float velocity = 0;
 	Circle playerCircle;
+	Rectangle[] topTubeRectangles;
+    Rectangle[] bottomTubeRectangles;
 
 	boolean gameActive = false;
+
+	int score = 0;
+
+	float halfScreenHeight;
 	float gap = 350;
 	float maxTubeOffset;
 	Random randomGenerator;
@@ -35,31 +43,10 @@ public class FlappyTrump extends ApplicationAdapter {
 	float[] tubeX = new float[numberOfTubes];
 	float[] tubeOffset = new float[numberOfTubes];
 	float distanceBetweenTubes;
-	
-	@Override
-	public void create () {
-		batch = new SpriteBatch();
-		shapeRenderer = new ShapeRenderer();
-		playerCircle = new Circle();
 
-		background = new Texture("ny-background.png");
-		topTubeMedia = new Texture("toptube-media.png");
-		bottomTube = new Texture("bottomtube.png");
-		player = new Texture[2];
-		player[0] = new Texture("trumpUp.png");
-		player[1] = new Texture("trumpDown.png");
-		playerY = (Gdx.graphics.getHeight() / 2) - (player[playerState].getHeight() / 2);
-		playerX = Gdx.graphics.getWidth() / 4;
-		maxTubeOffset = (Gdx.graphics.getHeight() / 2) - (gap / 2) - 100;
-		randomGenerator = new Random();
-		distanceBetweenTubes = Gdx.graphics.getWidth();
-
-		for (int i = 0; i < numberOfTubes; i++) {
-			tubeX[i] = (Gdx.graphics.getWidth() / 2) - (topTubeMedia.getWidth() / 2) + (i * distanceBetweenTubes);
-		}
-	}
 
 	/* TODO:
+	- Make face #2 (when screen is touched) display little longer after the screen tap
 	- Add obstacle tubes
 	- Game over:
 		- Check for collision
@@ -72,10 +59,45 @@ public class FlappyTrump extends ApplicationAdapter {
 	- Add extra obstacle (ie media) to either bottom of the topTube or top of bottomTube
 	- Add rotation of extra obstacle (ie China, Nancy Pelosi, Rosy O'Donnel)
 	 */
+	
+	@Override
+	public void create () {
+		batch = new SpriteBatch();
+//		shapeRenderer = new ShapeRenderer();
+		halfScreenHeight = Gdx.graphics.getHeight() / 2;
+
+		playerCircle = new Circle();
+		topTubeRectangles = new Rectangle[numberOfTubes];
+        bottomTubeRectangles = new Rectangle[numberOfTubes];
+
+        background = new Texture("ny-background.png");
+		topTubeMedia = new Texture("toptube-media.png");
+		bottomTube = new Texture("bottomtube.png");
+
+		player = new Texture[2];
+		player[0] = new Texture("trumpUp.png");
+		player[1] = new Texture("trumpDown.png");
+		playerY = halfScreenHeight - (player[playerState].getHeight() / 2);
+		playerX = Gdx.graphics.getWidth() / 4;
+
+		maxTubeOffset = (halfScreenHeight) - (gap / 2) - 100;
+		randomGenerator = new Random();
+		distanceBetweenTubes = Gdx.graphics.getWidth();
+
+		for (int i = 0; i < numberOfTubes; i++) {
+			tubeX[i] = (Gdx.graphics.getWidth() / 2) - (topTubeMedia.getWidth() / 2) + (i * distanceBetweenTubes)  + Gdx.graphics.getWidth();
+			topTubeRectangles[i] = new Rectangle();
+			bottomTubeRectangles[i] = new Rectangle();
+		}
+	}
+
 	@Override
 	public void render () {
 		batch.begin();
 		batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
+
+//		shapeRenderer.begin(ShapeType.Filled);
+//		shapeRenderer.setColor(Color.RED);
 
 		// Start game when screen is touched
 		if (gameActive) {
@@ -97,8 +119,11 @@ public class FlappyTrump extends ApplicationAdapter {
 				tubeX[i] -= tubeVelocity;
 			}
 
-			batch.draw(topTubeMedia, tubeX[i], (Gdx.graphics.getHeight() / 2) + (gap /2) + tubeOffset[i]);
-			batch.draw(bottomTube, tubeX[i], (Gdx.graphics.getHeight() / 2) - (gap/2) - bottomTube.getHeight() + tubeOffset[i]);
+			batch.draw(topTubeMedia, tubeX[i], halfScreenHeight + (gap /2) + tubeOffset[i]);
+			batch.draw(bottomTube, tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i]);
+
+			topTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight + (gap/2) + tubeOffset[i], topTubeMedia.getWidth(), topTubeMedia.getHeight());
+			bottomTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i], bottomTube.getWidth(), bottomTube.getHeight());
 		}
 
 		Gdx.input.setInputProcessor(new InputAdapter() {
@@ -121,11 +146,17 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player[playerState].getHeight() / 2, player[playerState].getHeight() / 2);
 
-		shapeRenderer.begin(ShapeType.Filled);
-		shapeRenderer.setColor(Color.RED);
+//		shapeRenderer.circle(playerCircle.x, playerCircle.y, playerCircle.radius);
 
-		shapeRenderer.circle(playerCircle.x, playerCircle.y, playerCircle.radius);
-		shapeRenderer.end();
+		for (int i = 0; i < numberOfTubes; i++) {
+//			shapeRenderer.rect(tubeX[i], halfScreenHeight + (gap/2) + tubeOffset[i], topTubeMedia.getWidth(), topTubeMedia.getHeight());
+//			shapeRenderer.rect(tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i], bottomTube.getWidth(), bottomTube.getHeight());
+
+			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
+				System.out.println("AH!");
+			}
+		}
+//		shapeRenderer.end();
 	}
 	
 	@Override
