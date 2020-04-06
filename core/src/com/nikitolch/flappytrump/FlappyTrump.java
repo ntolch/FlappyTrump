@@ -33,6 +33,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	Circle playerCircle;
 	Rectangle[] topTubeRectangles;
     Rectangle[] bottomTubeRectangles;
+    Rectangle screenRectangle;
 
 	int gameState = 0;
 
@@ -81,6 +82,7 @@ public class FlappyTrump extends ApplicationAdapter {
 		playerCircle = new Circle();
 		topTubeRectangles = new Rectangle[numberOfTubes];
         bottomTubeRectangles = new Rectangle[numberOfTubes];
+        screenRectangle = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         background = new Texture("ny-background.png");
 		topTubeMedia = new Texture("toptube-media.png");
@@ -99,7 +101,6 @@ public class FlappyTrump extends ApplicationAdapter {
 	}
 
 	public void startGame() {
-
 		playerY = halfScreenHeight - (player[playerState].getHeight() / 2) - (gameover.getHeight() / 3);
 
 		for (int i = 0; i < numberOfTubes; i++) {
@@ -117,55 +118,50 @@ public class FlappyTrump extends ApplicationAdapter {
 //		shapeRenderer.begin(ShapeType.Filled);
 //		shapeRenderer.setColor(Color.RED);
 
-		// Start game when screen is touched
 		if (gameState == 1) {
-			if (playerY > 0) { // just while testing: stops player from falling off screen
+			for (int i = 0; i < numberOfTubes; i++) {
+				if (tubeX[i] < -topTubeMedia.getWidth()) {
+					tubeX[i] += numberOfTubes * distanceBetweenTubes;
+					tubeOffset[i] = (randomGenerator.nextFloat()) * (Gdx.graphics.getHeight() - gap - 500);
+				} else {
+					tubeX[i] -= tubeVelocity;
+				}
+
+				batch.draw(topTubeMedia, tubeX[i], halfScreenHeight + (gap /2) + tubeOffset[i]);
+				batch.draw(bottomTube, tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i]);
+
+				topTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight + (gap/2) + tubeOffset[i], topTubeMedia.getWidth(), topTubeMedia.getHeight());
+				bottomTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i], bottomTube.getWidth(), bottomTube.getHeight());
+			}
+
+			if (tubeX[scoringTube] < playerCircle.x) {
+				score++;
+				if (scoringTube < numberOfTubes - 1) scoringTube++;
+				else scoringTube = 0;
+			}
+
+			if (playerY + player[playerState].getHeight() > Gdx.graphics.getHeight()) {
+				velocity = 0;
+				playerY = Gdx.graphics.getHeight() - player[playerState].getHeight();
+			} else if (playerY > 0) { // just while testing: stops player from falling off screen
 				velocity ++;
-				playerY -= velocity;
+				playerY -= velocity; // stops player from moving past bottom of screen
 			} else {
-				gameState = 2;
+				gameState = 2; // if player at bottom of screen, show game over text
 			}
+
 		} else if (gameState == 0){
-			if (Gdx.input.justTouched()) {
-				gameState = 1;
-			}
+			if (Gdx.input.justTouched()) gameState = 1;
+
 		} else if (gameState == 2 ){
 			batch.draw(gameover, halfScreenWidth - (gameover.getWidth() / 2), halfScreenHeight - (gameover.getHeight() / 8));
 			if (Gdx.input.justTouched()) {
 				gameState = 1;
-			}
-		}
-
-		for (int i = 0; i < numberOfTubes; i++) {
-			if (tubeX[i] < -topTubeMedia.getWidth()) {
-				tubeX[i] += numberOfTubes * distanceBetweenTubes;
-				tubeOffset[i] = (randomGenerator.nextFloat()) * (Gdx.graphics.getHeight() - gap - 500);
-			} else {
-				tubeX[i] -= tubeVelocity;
-			}
-
-			batch.draw(topTubeMedia, tubeX[i], halfScreenHeight + (gap /2) + tubeOffset[i]);
-			batch.draw(bottomTube, tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i]);
-
-			topTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight + (gap/2) + tubeOffset[i], topTubeMedia.getWidth(), topTubeMedia.getHeight());
-			bottomTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i], bottomTube.getWidth(), bottomTube.getHeight());
-
-			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
-				System.out.println("AH!");
-				// end game
-				gameState = 2;
+				startGame();
 				score = 0;
 				scoringTube = 0;
 				velocity = 0;
-				startGame();
 			}
-		}
-
-		if (tubeX[scoringTube] < playerCircle.x) {
-			score++;
-			System.out.println("Score: " + score);
-			if (scoringTube < numberOfTubes - 1) scoringTube++;
-			else scoringTube = 0;
 		}
 
 		batch.draw(player[playerState], playerX, playerY, player[playerState].getWidth(), player[playerState].getHeight());
@@ -174,15 +170,18 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player[playerState].getHeight() / 2, player[playerState].getHeight() / 2);
 
+		for (int i = 0; i < numberOfTubes; i++) {
+			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
+				startGame();
+				gameState = 2;
+			}
+		}
+
 		Gdx.input.setInputProcessor(new InputAdapter() {
 			@Override
 			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
 				if (playerState == 1) playerState = 0;
-				if (playerY + player[playerState].getHeight() > Gdx.graphics.getHeight()) {
-					playerY = Gdx.graphics.getHeight() - playerY - player[playerState].getHeight();
-				} else {
-                	velocity -= 25;
-				}
+				velocity -= 25;
 				return super.touchDown(screenX, screenY, pointer, button);
 			}
 			@Override
@@ -191,9 +190,6 @@ public class FlappyTrump extends ApplicationAdapter {
 				return super.touchUp(screenX, screenY, pointer, button);
 			}
 		});
-
-//		shapeRenderer.circle(playerCircle.x, playerCircle.y, playerCircle.radius);
-//		shapeRenderer.end();
 	}
 	
 	@Override
