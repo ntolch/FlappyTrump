@@ -41,7 +41,7 @@ public class FlappyTrump extends ApplicationAdapter {
 
 	float halfScreenHeight;
 	float halfScreenWidth;
-	float gap = 350;
+	float gap = 450;
 	float maxTubeOffset;
 	Random randomGenerator;
 	float tubeVelocity = 4;
@@ -85,7 +85,7 @@ public class FlappyTrump extends ApplicationAdapter {
         screenRectangle = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         background = new Texture("ny-background.png");
-		topTubeMedia = new Texture("toptube-media.png");
+		topTubeMedia = new Texture("toptube.png");
 		bottomTube = new Texture("bottomtube.png");
 
 		player = new Texture[2];
