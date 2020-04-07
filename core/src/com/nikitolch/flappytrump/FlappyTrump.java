@@ -88,9 +88,16 @@ public class FlappyTrump extends ApplicationAdapter {
 		topTubeMedia = new Texture("toptube.png");
 		bottomTube = new Texture("bottomtube.png");
 
-		player = new Texture[2];
-		player[0] = new Texture("trumpUp.png");
-		player[1] = new Texture("trumpDown.png");
+		player = new Texture[9];
+		player[0] = new Texture("trump-smile-1.png");
+		player[1] = new Texture("trump-smile-2.png");
+		player[2] = new Texture("trump-smile-3.png");
+		player[3] = new Texture("trump-smile-4.png");
+		player[4] = new Texture("trump-smile-5.png");
+		player[5] = new Texture("trump-smile-6.png");
+		player[6] = new Texture("trump-smile-7.png");
+		player[7] = new Texture("trump-smile-8.png");
+		player[8] = new Texture("trump-smile-9.png");
 		playerX = Gdx.graphics.getWidth() / 4;
 
 		maxTubeOffset = (halfScreenHeight) - (gap / 2) - 100;
