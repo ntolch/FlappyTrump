@@ -17,8 +17,8 @@ import com.badlogic.gdx.math.Rectangle;
 import java.util.Random;
 
 public class FlappyTrump extends ApplicationAdapter {
-	public static final int SCREEN_WIDTH = 400;
-	public static final int SCREEN_HEIGHT = 800;
+	public static final float SCREEN_WIDTH = 400;
+	public static final float SCREEN_HEIGHT = 800;
 
 	SpriteBatch batch;
 //	ShapeRenderer shapeRenderer;

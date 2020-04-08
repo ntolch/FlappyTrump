@@ -5,6 +5,8 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Circle;
 
+import static com.nikitolch.flappytrump.FlappyTrump.*;
+
 // Todo add player sound?
 
 public class PlayerSprite {
@@ -19,8 +21,8 @@ public class PlayerSprite {
 
     public PlayerSprite() {
         playerTexture = new Texture("trump-smile-combo.png");
-        playerX = FlappyTrump.SCREEN_WIDTH / 4;
-        playerY = (FlappyTrump.SCREEN_HEIGHT / 2) - (playerTexture.getHeight() / 2); // - (gameoverText.getHeight() / 3)
+        playerX = SCREEN_WIDTH / 4;
+        playerY = (SCREEN_HEIGHT / 2) - (playerTexture.getHeight() / 2); // - (gameoverText.getHeight() / 3)
         playerCircle = new Circle();
         playerAnimation = new Animation(new TextureRegion(playerTexture), 9, 0.5f);
         // flapSound = Gdx.audio...
@@ -30,7 +32,7 @@ public class PlayerSprite {
         playerAnimation.update();
         playerCircle.set(playerX, playerY, playerTexture.getHeight() / 2);
 
-//        playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + playerTexture.getHeight() / 2, playerTexture.getHeight() / 2);
+        playerCircle.set(SCREEN_WIDTH / 3, playerY + playerTexture.getHeight() / 2, playerTexture.getHeight() / 2);
 
         if (playerY + playerTexture.getHeight() > Gdx.graphics.getHeight()) { // stop player from going passed top of screen
             velocity = 0;
