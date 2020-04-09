@@ -9,7 +9,7 @@ import static com.nikitolch.flappytrump.FlappyTrump.*;
 
 // Todo add player sound?
 
-public class PlayerSprite {
+public class Player {
 
     float playerY, playerX; // Position
     float velocity = 0; // Initial velocity
@@ -19,7 +19,7 @@ public class PlayerSprite {
 
     // Sound flapSound;
 
-    public PlayerSprite() {
+    public Player() {
         playerTexture = new Texture("trump-smile-combo.png");
         playerX = SCREEN_WIDTH / 4;
         playerY = (SCREEN_HEIGHT / 2) - (playerTexture.getHeight() / 2); // - (gameoverText.getHeight() / 3)
