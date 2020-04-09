@@ -37,8 +37,8 @@ import java.util.Random;
 	 */
 
 public class FlappyTrump extends ApplicationAdapter {
-	public static final float SCREEN_WIDTH = 400;
-	public static final float SCREEN_HEIGHT = 800;
+	public static final float SCREEN_WIDTH = Gdx.graphics.getWidth();
+	public static final float SCREEN_HEIGHT = Gdx.graphics.getHeight();
 
 	SpriteBatch batch;
 //	ShapeRenderer shapeRenderer;
