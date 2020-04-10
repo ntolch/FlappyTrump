@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Circle;
@@ -22,13 +23,17 @@ public class FlappyTrump extends ApplicationAdapter {
 	Texture gameover;
 	Texture topTubeMedia;
 	Texture bottomTube;
-	Texture[] player;
+	Texture playerTexture;
 
+	float dt = .05f; // time between frames
+	float cycleTime = .5f; // time of 1 cycle through all frames
 	BitmapFont font;
 
 	int playerState = 1;
 	float playerY;
 	float playerX;
+	Animation playerAnimation;
+
 	float velocity = 0;
 	Circle playerCircle;
 	Rectangle[] topTubeRectangles;
@@ -88,16 +93,9 @@ public class FlappyTrump extends ApplicationAdapter {
 		topTubeMedia = new Texture("toptube.png");
 		bottomTube = new Texture("bottomtube.png");
 
-		player = new Texture[9];
-		player[0] = new Texture("trump-smile-1.png");
-		player[1] = new Texture("trump-smile-2.png");
-		player[2] = new Texture("trump-smile-3.png");
-		player[3] = new Texture("trump-smile-4.png");
-		player[4] = new Texture("trump-smile-5.png");
-		player[5] = new Texture("trump-smile-6.png");
-		player[6] = new Texture("trump-smile-7.png");
-		player[7] = new Texture("trump-smile-8.png");
-		player[8] = new Texture("trump-smile-9.png");
+		playerTexture = new Texture("trump-smile-combo.png");
+		playerAnimation = new Animation(new TextureRegion(playerTexture), 9, cycleTime);
+
 		playerX = Gdx.graphics.getWidth() / 4;
 
 		maxTubeOffset = (halfScreenHeight) - (gap / 2) - 100;
@@ -108,7 +106,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	}
 
 	public void startGame() {
-		playerY = halfScreenHeight - (player[playerState].getHeight() / 2) - (gameover.getHeight() / 3);
+		playerY = halfScreenHeight - (playerTexture.getHeight() / 2) - (gameover.getHeight() / 3);
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			tubeX[i] = halfScreenWidth - (topTubeMedia.getWidth() / 2) + (i * distanceBetweenTubes)  + Gdx.graphics.getWidth();
@@ -147,9 +145,9 @@ public class FlappyTrump extends ApplicationAdapter {
 				else scoringTube = 0;
 			}
 
-			if (playerY + player[playerState].getHeight() > Gdx.graphics.getHeight()) {
+			if (playerY + playerTexture.getHeight() > Gdx.graphics.getHeight()) {
 				velocity = 0;
-				playerY = Gdx.graphics.getHeight() - player[playerState].getHeight();
+				playerY = Gdx.graphics.getHeight() - playerTexture.getHeight();
 			} else if (playerY > 0) { // just while testing: stops player from falling off screen
 				velocity ++;
 				playerY -= velocity; // stops player from moving past bottom of screen
@@ -171,11 +169,12 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 		}
 
-		batch.draw(player[playerState], playerX, playerY, player[playerState].getWidth(), player[playerState].getHeight());
+		batch.draw(playerAnimation.getFrame(), playerX, playerY, playerTexture.getWidth() / 9, playerTexture.getHeight());
 		font.draw(batch, String.valueOf(score), 100, 200);
 		batch.end();
 
-		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player[playerState].getHeight() / 2, player[playerState].getHeight() / 2);
+		playerAnimation.update(dt);
+		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + playerTexture.getHeight() / 2, playerTexture.getHeight() / 2);
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
@@ -201,6 +200,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	
 	@Override
 	public void dispose () {
+		playerTexture.dispose();
 		batch.dispose();
 		background.dispose();
 	}
