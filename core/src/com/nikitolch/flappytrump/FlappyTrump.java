@@ -115,6 +115,12 @@ public class FlappyTrump extends ApplicationAdapter {
 		}
 	}
 
+	public void jump() {
+		if (Gdx.input.justTouched()) {
+			velocity -= 25;
+		}
+	}
+
 	@Override
 	public void render () {
 		batch.begin();
@@ -124,6 +130,7 @@ public class FlappyTrump extends ApplicationAdapter {
 //		shapeRenderer.setColor(Color.RED);
 
 		if (gameState == 1) {
+			jump();
 			for (int i = 0; i < numberOfTubes; i++) {
 				if (tubeX[i] < -topTubeMedia.getWidth()) {
 					tubeX[i] += numberOfTubes * distanceBetweenTubes;
@@ -156,13 +163,17 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 
 		} else if (gameState == 0){
-			if (Gdx.input.justTouched()) gameState = 1;
+			if (Gdx.input.justTouched()) {
+				jump();
+				gameState = 1;
+			}
 
 		} else if (gameState == 2 ){
 			batch.draw(gameover, halfScreenWidth - (gameover.getWidth() / 2), halfScreenHeight - (gameover.getHeight() / 8));
+			startGame();
 			if (Gdx.input.justTouched()) {
+				jump();
 				gameState = 1;
-				startGame();
 				score = 0;
 				scoringTube = 0;
 				velocity = 0;
@@ -182,20 +193,6 @@ public class FlappyTrump extends ApplicationAdapter {
 				gameState = 2;
 			}
 		}
-
-		Gdx.input.setInputProcessor(new InputAdapter() {
-			@Override
-			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-				if (playerState == 1) playerState = 0;
-				velocity -= 25;
-				return super.touchDown(screenX, screenY, pointer, button);
-			}
-			@Override
-			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-				if (playerState == 0) playerState = 1;
-				return super.touchUp(screenX, screenY, pointer, button);
-			}
-		});
 	}
 	
 	@Override

@@ -21,8 +21,8 @@ public class Animation {
         currentFrame = 0;
     }
 
-    public void update() { // deltaTime is change in time between render cycles
-        currentFrameTime += .05f;
+    public void update(float dt) { // deltaTime is change in time between render cycles
+        currentFrameTime += dt;
         if (currentFrameTime > maxFrameTime) {
             currentFrame++;
             currentFrameTime = 0;
