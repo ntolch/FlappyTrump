@@ -29,7 +29,6 @@ public class FlappyTrump extends ApplicationAdapter {
 	float cycleTime = .5f; // time of 1 cycle through all frames
 	BitmapFont font;
 
-	int playerState = 1;
 	float playerY;
 	float playerX;
 	Animation playerAnimation;
@@ -38,7 +37,6 @@ public class FlappyTrump extends ApplicationAdapter {
 	Circle playerCircle;
 	Rectangle[] topTubeRectangles;
     Rectangle[] bottomTubeRectangles;
-    Rectangle screenRectangle;
 
 	int gameState = 0;
 
@@ -87,7 +85,6 @@ public class FlappyTrump extends ApplicationAdapter {
 		playerCircle = new Circle();
 		topTubeRectangles = new Rectangle[numberOfTubes];
         bottomTubeRectangles = new Rectangle[numberOfTubes];
-        screenRectangle = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
         background = new Texture("ny-background.png");
 		topTubeMedia = new Texture("toptube.png");
@@ -116,9 +113,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	}
 
 	public void jump() {
-		if (Gdx.input.justTouched()) {
-			velocity -= 25;
-		}
+		velocity -= 25;
 	}
 
 	@Override
@@ -126,11 +121,12 @@ public class FlappyTrump extends ApplicationAdapter {
 		batch.begin();
 		batch.draw(background, 0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
+		if (Gdx.input.justTouched()) jump();
+
 //		shapeRenderer.begin(ShapeType.Filled);
 //		shapeRenderer.setColor(Color.RED);
 
 		if (gameState == 1) {
-			jump();
 			for (int i = 0; i < numberOfTubes; i++) {
 				if (tubeX[i] < -topTubeMedia.getWidth()) {
 					tubeX[i] += numberOfTubes * distanceBetweenTubes;
@@ -164,7 +160,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		} else if (gameState == 0){
 			if (Gdx.input.justTouched()) {
-				jump();
 				gameState = 1;
 			}
 
@@ -172,8 +167,7 @@ public class FlappyTrump extends ApplicationAdapter {
 			batch.draw(gameover, halfScreenWidth - (gameover.getWidth() / 2), halfScreenHeight - (gameover.getHeight() / 8));
 			startGame();
 			if (Gdx.input.justTouched()) {
-				jump();
-				gameState = 1;
+				gameState = 0;
 				score = 0;
 				scoringTube = 0;
 				velocity = 0;
@@ -189,7 +183,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
-				startGame();
 				gameState = 2;
 			}
 		}
