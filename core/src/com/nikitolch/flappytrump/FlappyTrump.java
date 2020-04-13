@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Circle;
@@ -22,7 +23,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	Texture gameover;
 	Texture topTubeMedia;
 	Texture bottomTube;
-	Texture[] player;
+	Texture player;
 
 	BitmapFont font;
 
@@ -37,6 +38,7 @@ public class FlappyTrump extends ApplicationAdapter {
 
 	int gameState = 0;
 
+	Animation playerAnimation;
 	int score = 0;
 
 	float halfScreenHeight;
@@ -88,16 +90,8 @@ public class FlappyTrump extends ApplicationAdapter {
 		topTubeMedia = new Texture("toptube.png");
 		bottomTube = new Texture("bottomtube.png");
 
-		player = new Texture[9];
-		player[0] = new Texture("trump-smile-1.png");
-		player[1] = new Texture("trump-smile-2.png");
-		player[2] = new Texture("trump-smile-3.png");
-		player[3] = new Texture("trump-smile-4.png");
-		player[4] = new Texture("trump-smile-5.png");
-		player[5] = new Texture("trump-smile-6.png");
-		player[6] = new Texture("trump-smile-7.png");
-		player[7] = new Texture("trump-smile-8.png");
-		player[8] = new Texture("trump-smile-9.png");
+		player = new Texture("trump-smile-combo.png");
+		playerAnimation = new Animation(new TextureRegion(player), 9, .05f);
 		playerX = Gdx.graphics.getWidth() / 4;
 
 		maxTubeOffset = (halfScreenHeight) - (gap / 2) - 100;
@@ -108,7 +102,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	}
 
 	public void startGame() {
-		playerY = halfScreenHeight - (player[playerState].getHeight() / 2) - (gameover.getHeight() / 3);
+		playerY = halfScreenHeight - (player.getHeight() / 2) - (gameover.getHeight() / 3);
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			tubeX[i] = halfScreenWidth - (topTubeMedia.getWidth() / 2) + (i * distanceBetweenTubes)  + Gdx.graphics.getWidth();
@@ -126,6 +120,10 @@ public class FlappyTrump extends ApplicationAdapter {
 //		shapeRenderer.setColor(Color.RED);
 
 		if (gameState == 1) {
+			if (Gdx.input.justTouched()) {
+				velocity -= 25;
+			}
+
 			for (int i = 0; i < numberOfTubes; i++) {
 				if (tubeX[i] < -topTubeMedia.getWidth()) {
 					tubeX[i] += numberOfTubes * distanceBetweenTubes;
@@ -147,9 +145,9 @@ public class FlappyTrump extends ApplicationAdapter {
 				else scoringTube = 0;
 			}
 
-			if (playerY + player[playerState].getHeight() > Gdx.graphics.getHeight()) {
+			if (playerY + player.getHeight() > Gdx.graphics.getHeight()) {
 				velocity = 0;
-				playerY = Gdx.graphics.getHeight() - player[playerState].getHeight();
+				playerY = Gdx.graphics.getHeight() - player.getHeight();
 			} else if (playerY > 0) { // just while testing: stops player from falling off screen
 				velocity ++;
 				playerY -= velocity; // stops player from moving past bottom of screen
@@ -158,11 +156,15 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 
 		} else if (gameState == 0){
-			if (Gdx.input.justTouched()) gameState = 1;
+			if (Gdx.input.justTouched()) {
+				gameState = 1;
+				velocity -= 25;
+			}
 
 		} else if (gameState == 2 ){
 			batch.draw(gameover, halfScreenWidth - (gameover.getWidth() / 2), halfScreenHeight - (gameover.getHeight() / 8));
 			if (Gdx.input.justTouched()) {
+				velocity -= 25;
 				gameState = 1;
 				startGame();
 				score = 0;
@@ -171,11 +173,11 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 		}
 
-		batch.draw(player[playerState], playerX, playerY, player[playerState].getWidth(), player[playerState].getHeight());
+		batch.draw(playerAnimation.getFrame(), playerX, playerY, player.getWidth() / 9, player.getHeight());
 		font.draw(batch, String.valueOf(score), 100, 200);
 		batch.end();
 
-		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player[playerState].getHeight() / 2, player[playerState].getHeight() / 2);
+		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player.getHeight() / 2, player.getHeight() / 2);
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
@@ -184,19 +186,8 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 		}
 
-		Gdx.input.setInputProcessor(new InputAdapter() {
-			@Override
-			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-				if (playerState == 1) playerState = 0;
-				velocity -= 25;
-				return super.touchDown(screenX, screenY, pointer, button);
-			}
-			@Override
-			public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-				if (playerState == 0) playerState = 1;
-				return super.touchUp(screenX, screenY, pointer, button);
-			}
-		});
+		playerAnimation.update(.5f);
+
 	}
 	
 	@Override
