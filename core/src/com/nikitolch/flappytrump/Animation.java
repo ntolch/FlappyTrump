@@ -7,7 +7,7 @@ public class Animation {
     private Array<TextureRegion> frames;
     private float maxFrameTime;
     private float currentFrameTime;
-    private int frameCount;
+    public int frameCount;
     private int currentFrame;
 
     public Animation(TextureRegion region, int frameCount, float cycleTime) { // Region is combined images
@@ -21,8 +21,8 @@ public class Animation {
         currentFrame = 0;
     }
 
-    public void update(float deltaTime) { // deltaTime is change in time between render cycles
-        currentFrameTime += deltaTime;
+    public void update(float dt) { // deltaTime is change in time between render cycles
+        currentFrameTime += dt;
         if (currentFrameTime > maxFrameTime) {
             currentFrame++;
             currentFrameTime = 0;
