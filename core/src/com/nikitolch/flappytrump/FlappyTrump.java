@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer.ShapeType;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
 
 import java.util.Random;
 
@@ -21,19 +22,24 @@ public class FlappyTrump extends ApplicationAdapter {
 //	ShapeRenderer shapeRenderer;
 	Texture background;
 	Texture gameover;
+
 	Texture topTubeMedia;
 	Texture bottomTube;
+	Rectangle[] topTubeRectangles;
+    Rectangle[] bottomTubeRectangles;
+
+    Texture extraObsTexture;
+    Animation extraObsAnimation;
+	Rectangle[] extraObsRectangle;
+
 	Texture player;
+	Circle playerCircle;
 
 	BitmapFont font;
 
-	int playerState = 1;
 	float playerY;
 	float playerX;
 	float velocity = 0;
-	Circle playerCircle;
-	Rectangle[] topTubeRectangles;
-    Rectangle[] bottomTubeRectangles;
     Rectangle screenRectangle;
 
 	int gameState = 0;
@@ -67,6 +73,10 @@ public class FlappyTrump extends ApplicationAdapter {
 	- Prevent player from going above the screen height
 	- Add extra obstacle (ie media) to either bottom of the topTube or top of bottomTube
 	- Add rotation of extra obstacle (ie China, Nancy Pelosi, Rosy O'Donnel)
+	- Bonus Round:
+			(achieved either by 1. reaching points/levels or
+			2. removing a top or bottom pipe and putting Putin or something to get instead of avoid)
+			- get to say "You're fired" to every obstacle passed for 10 seconds and get double points
 	 */
 	
 	@Override
@@ -81,18 +91,23 @@ public class FlappyTrump extends ApplicationAdapter {
 		font.getData().setScale(10);
 
 		gameover = new Texture("gameover.png");
-		playerCircle = new Circle();
-		topTubeRectangles = new Rectangle[numberOfTubes];
-        bottomTubeRectangles = new Rectangle[numberOfTubes];
-        screenRectangle = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-
-        background = new Texture("ny-background.png");
-		topTubeMedia = new Texture("toptube.png");
-		bottomTube = new Texture("bottomtube.png");
 
 		player = new Texture("trump-smile-combo.png");
 		playerAnimation = new Animation(new TextureRegion(player), 9, .05f);
 		playerX = Gdx.graphics.getWidth() / 4;
+		playerCircle = new Circle();
+
+        background = new Texture("ny-background.png");
+		topTubeMedia = new Texture("toptube.png");
+		bottomTube = new Texture("bottomtube.png");
+		topTubeRectangles = new Rectangle[numberOfTubes];
+        bottomTubeRectangles = new Rectangle[numberOfTubes];
+
+		extraObsTexture = new Texture("odonnell-combo-2.png");
+        extraObsAnimation = new Animation(new TextureRegion(extraObsTexture), 19, .5f);
+        extraObsRectangle = new Rectangle[numberOfTubes];
+
+        screenRectangle = new Rectangle(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 
 		maxTubeOffset = (halfScreenHeight) - (gap / 2) - 100;
 		randomGenerator = new Random();
@@ -108,6 +123,7 @@ public class FlappyTrump extends ApplicationAdapter {
 			tubeX[i] = halfScreenWidth - (topTubeMedia.getWidth() / 2) + (i * distanceBetweenTubes)  + Gdx.graphics.getWidth();
 			topTubeRectangles[i] = new Rectangle();
 			bottomTubeRectangles[i] = new Rectangle();
+			extraObsRectangle[i] = new Rectangle();
 		}
 	}
 
@@ -134,9 +150,11 @@ public class FlappyTrump extends ApplicationAdapter {
 
 				batch.draw(topTubeMedia, tubeX[i], halfScreenHeight + (gap /2) + tubeOffset[i]);
 				batch.draw(bottomTube, tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i]);
+				batch.draw(extraObsAnimation.getFrame(), tubeX[i], halfScreenHeight - (gap/2) + tubeOffset[i], extraObsTexture.getWidth() / 19, extraObsTexture.getHeight());
 
 				topTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight + (gap/2) + tubeOffset[i], topTubeMedia.getWidth(), topTubeMedia.getHeight());
 				bottomTubeRectangles[i] = new Rectangle(tubeX[i], halfScreenHeight - (gap/2) - bottomTube.getHeight() + tubeOffset[i], bottomTube.getWidth(), bottomTube.getHeight());
+				extraObsRectangle[i] = new Rectangle(tubeX[i], halfScreenHeight - (gap/2) + tubeOffset[i], bottomTube.getWidth(), extraObsTexture.getHeight());
 			}
 
 			if (tubeX[scoringTube] < playerCircle.x) {
@@ -180,13 +198,16 @@ public class FlappyTrump extends ApplicationAdapter {
 		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player.getHeight() / 2, player.getHeight() / 2);
 
 		for (int i = 0; i < numberOfTubes; i++) {
-			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) || Intersector.overlaps(playerCircle, bottomTubeRectangles[i])) {
+			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) ||
+					Intersector.overlaps(playerCircle, bottomTubeRectangles[i]) ||
+					Intersector.overlaps(playerCircle, extraObsRectangle[i])) {
 				startGame();
 				gameState = 2;
 			}
 		}
 
 		playerAnimation.update(.5f);
+		extraObsAnimation.update(.9f);
 
 	}
 	
