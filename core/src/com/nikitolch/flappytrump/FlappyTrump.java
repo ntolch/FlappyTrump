@@ -2,6 +2,7 @@ package com.nikitolch.flappytrump;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -10,6 +11,8 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.utils.Array;
+
 import java.util.Random;
 
 public class FlappyTrump extends ApplicationAdapter {
@@ -40,6 +43,7 @@ public class FlappyTrump extends ApplicationAdapter {
 
     Texture extraObsTexture;
     Animation extraObsAnimation;
+    Array<Texture> extraObsArray;
 	Rectangle[] extraObsRectangle;
 
 	float gap;
@@ -61,7 +65,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	int score = 0;
 
 	float[] tubeYFluctuation = new float[numberOfTubes];
-	Random randomGenerator;
+	Random rand;
 
 
 	/* TODO:
@@ -118,17 +122,22 @@ public class FlappyTrump extends ApplicationAdapter {
 		topTubeRectangles = new Rectangle[numberOfTubes];
         bottomTubeRectangles = new Rectangle[numberOfTubes];
 
-		extraObsTexture = new Texture("odonnell-combo-2.png");
+//		extraObsTexture = new Texture("odonnell-combo-2.png");
         extraObsAnimation = new Animation(new TextureRegion(extraObsTexture), 19, .05f);
         extraObsRectangle = new Rectangle[numberOfTubes];
+        extraObsArray = new Array<>();
+
+		// Get directory
+		FileHandle dir = Gdx.files.internal("obstacles");
+		// Get a random texture of dir
+		extraObsTexture = new Texture(dir.list()[rand.nextInt(dir.list().length)]);
 
 		distanceBetweenTubes = WIDTH;
 
 		////
-		randomGenerator = new Random();
+		rand = new Random();
 
 		startGame();
-
 	}
 
 	public void startGame() {
@@ -166,13 +175,13 @@ public class FlappyTrump extends ApplicationAdapter {
 			for (int i = 0; i < numberOfTubes; i++) {
 				if (tubeX[i] < -topTubeMedia.getWidth()) {
 					tubeX[i] += numberOfTubes * distanceBetweenTubes;
-					tubeYOffset[i] = randomGenerator.nextFloat() * HEIGHT - gap - extraObsTexture.getHeight();
+					tubeYOffset[i] = rand.nextFloat() * HEIGHT - gap - extraObsTexture.getHeight();
 
-					tubeYFluctuation[i] = randomGenerator.nextInt(200);
+					tubeYFluctuation[i] = rand.nextInt(200);
 
 
 					if (tubeYOffset[i] < -200) {
-						tubeYOffset[i] = randomGenerator.nextInt(100) + 10;
+						tubeYOffset[i] = rand.nextInt(100) + 10;
 					} else if (tubeYOffset[i] > 50) {
 						tubeYOffset[i] -= 70 + extraObsTexture.getHeight();
 					} else if (tubeYOffset[i] > 100) {
