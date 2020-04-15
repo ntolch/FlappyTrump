@@ -18,6 +18,9 @@ import com.badlogic.gdx.utils.Array;
 import java.util.Random;
 
 public class FlappyTrump extends ApplicationAdapter {
+	public static float HEIGHT = Gdx.graphics.getHeight();
+	public static float WIDTH = Gdx.graphics.getWidth();
+
 	SpriteBatch batch;
 //	ShapeRenderer shapeRenderer;
 	Texture background;
@@ -32,19 +35,22 @@ public class FlappyTrump extends ApplicationAdapter {
     Animation extraObsAnimation;
 	Rectangle[] extraObsRectangle;
 
+	// Player Sprite
 	Texture player;
 	Circle playerCircle;
-
-	BitmapFont font;
-
 	float playerY;
 	float playerX;
+	Animation playerAnimation;
 	float velocity = 0;
-    Rectangle screenRectangle;
+	////
 
 	int gameState = 0;
 
-	Animation playerAnimation;
+	BitmapFont font;
+
+	Rectangle screenRectangle;
+
+
 	int score = 0;
 
 	float halfScreenHeight;
@@ -92,10 +98,13 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		gameover = new Texture("gameover.png");
 
+		// Player Sprite
 		player = new Texture("trump-smile-combo.png");
 		playerAnimation = new Animation(new TextureRegion(player), 9, .05f);
 		playerX = Gdx.graphics.getWidth() / 4;
 		playerCircle = new Circle();
+		//
+
 
         background = new Texture("ny-background.png");
 		topTubeMedia = new Texture("toptube.png");
@@ -117,7 +126,9 @@ public class FlappyTrump extends ApplicationAdapter {
 	}
 
 	public void startGame() {
+		// Player Sprite
 		playerY = halfScreenHeight - (player.getHeight() / 2) - (gameover.getHeight() / 3);
+		//
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			tubeX[i] = halfScreenWidth - (topTubeMedia.getWidth() / 2) + (i * distanceBetweenTubes)  + Gdx.graphics.getWidth();
@@ -163,13 +174,17 @@ public class FlappyTrump extends ApplicationAdapter {
 				else scoringTube = 0;
 			}
 
+
+			// Player Sprite
 			if (playerY + player.getHeight() > Gdx.graphics.getHeight()) {
 				velocity = 0;
 				playerY = Gdx.graphics.getHeight() - player.getHeight();
 			} else if (playerY > 0) { // just while testing: stops player from falling off screen
 				velocity ++;
 				playerY -= velocity; // stops player from moving past bottom of screen
-			} else {
+			}
+			////
+			else {
 				gameState = 2; // if player at bottom of screen, show game over text
 			}
 
@@ -191,11 +206,14 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 		}
 
+		// Player Sprite
 		batch.draw(playerAnimation.getFrame(), playerX, playerY, player.getWidth() / 9, player.getHeight());
+		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player.getHeight() / 2, player.getHeight() / 2);
+		//
+
 		font.draw(batch, String.valueOf(score), 100, 200);
 		batch.end();
 
-		playerCircle.set(Gdx.graphics.getWidth() / 3, playerY + player.getHeight() / 2, player.getHeight() / 2);
 
 		for (int i = 0; i < numberOfTubes; i++) {
 			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) ||
@@ -206,7 +224,10 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 		}
 
+		// Player Sprite
 		playerAnimation.update(.5f);
+		//
+
 		extraObsAnimation.update(.9f);
 
 	}
