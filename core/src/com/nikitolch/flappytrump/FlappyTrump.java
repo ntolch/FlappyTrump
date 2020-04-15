@@ -18,8 +18,8 @@ import com.badlogic.gdx.utils.Array;
 import java.util.Random;
 
 public class FlappyTrump extends ApplicationAdapter {
-	public static float HEIGHT = Gdx.graphics.getHeight();
-	public static float WIDTH = Gdx.graphics.getWidth();
+	public static float HEIGHT;
+	public static float WIDTH;
 
 	SpriteBatch batch;
 //	ShapeRenderer shapeRenderer;
@@ -42,6 +42,9 @@ public class FlappyTrump extends ApplicationAdapter {
 	float playerX;
 	Animation playerAnimation;
 	float velocity = 0;
+
+	float halfScreenHeight;
+	float halfScreenWidth;
 	////
 
 	int gameState = 0;
@@ -53,8 +56,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 	int score = 0;
 
-	float halfScreenHeight;
-	float halfScreenWidth;
 	float gap = 450;
 	float maxTubeOffset;
 	Random randomGenerator;
@@ -89,6 +90,11 @@ public class FlappyTrump extends ApplicationAdapter {
 	public void create () {
 		batch = new SpriteBatch();
 //		shapeRenderer = new ShapeRenderer();
+		// Player Sprite
+		HEIGHT = Gdx.graphics.getHeight();
+		WIDTH = Gdx.graphics.getWidth();
+
+
 		halfScreenHeight = Gdx.graphics.getHeight() / 2;
 		halfScreenWidth = Gdx.graphics.getWidth() / 2;
 
