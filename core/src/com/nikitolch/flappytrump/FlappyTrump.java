@@ -31,9 +31,6 @@ public class FlappyTrump extends ApplicationAdapter {
 	float playerX;
 	Animation playerAnimation;
 	float velocity = 0;
-
-	float halfScreenHeight;
-	float halfScreenWidth;
 	////
 
     // Tube Sprite
@@ -104,10 +101,6 @@ public class FlappyTrump extends ApplicationAdapter {
 		// Player Sprite
 		HEIGHT = Gdx.graphics.getHeight();
 		WIDTH = Gdx.graphics.getWidth();
-
-		halfScreenHeight = Gdx.graphics.getHeight() / 2;
-		halfScreenWidth = Gdx.graphics.getWidth() / 2;
-        //
 
 		font = new BitmapFont();
 		font.setColor(Color.WHITE);
@@ -190,7 +183,7 @@ public class FlappyTrump extends ApplicationAdapter {
 
 	public void startGame() {
 		// Player Sprite
-		playerY = halfScreenHeight - (player.getHeight() / 2) - (gameover.getHeight() / 3);
+		playerY = HEIGHT/2 - (player.getHeight() / 2) - (gameover.getHeight() / 3);
 		//
 
         // Tube Sprite
@@ -278,10 +271,8 @@ public class FlappyTrump extends ApplicationAdapter {
 
 
 				} else {
-					// Move tubes to the left
-					tubeX[i] -= tubeVelocity;
-					// Move extra obstacle up from bottom
-					extraObsY[i] += extraObsVelocity;
+					tubeX[i] -= tubeVelocity;  // Move tubes to the left
+					extraObsY[i] += extraObsVelocity;  // Move extra obstacle up from bottom
 				}
 
 				// Move extra obstacle up through bottom of screen when it reaches top of screen
@@ -293,15 +284,18 @@ public class FlappyTrump extends ApplicationAdapter {
 				}
 
 				// Tube Position Variables
-				float topTubeY = HEIGHT/2 + gap/2 + extraObsHeight/2 + tubeYOffset[i] + tubeYFluctuation[i];
-				if (topTubeY > HEIGHT) topTubeY -= 120;
+				float topTubeY = HEIGHT/2 + gap/2 + extraObsAnimation.getFrame().getRegionHeight()/2 + tubeYOffset[i] + tubeYFluctuation[i];
+				if (topTubeY > HEIGHT) topTubeY -= extraObsAnimation.getFrame().getRegionHeight();
 
-				float botTubeY = HEIGHT/2 - gap/2 - extraObsHeight/2 - bottomTube.getHeight() + tubeYOffset[i];
-				if (botTubeY + bottomTube.getHeight() - extraObsHeight < extraObsHeight*2) botTubeY += extraObsHeight;
+				float botTubeY = HEIGHT/2 - gap/2 - extraObsAnimation.getFrame().getRegionHeight()/2 - bottomTube.getHeight() + tubeYOffset[i];
+				if (botTubeY + bottomTube.getHeight() - extraObsAnimation.getFrame().getRegionHeight() < extraObsAnimation.getFrame().getRegionHeight()*2) botTubeY += extraObsAnimation.getFrame().getRegionHeight();
 
 				// Extra Obs
-				batch.draw(extraObsAnimation.getFrame(), tubeX[i]+1, extraObsY[i], extraObsAnimation.getFrame().getRegionWidth(), extraObsHeight);
-				extraObsRectangle[i] = new Rectangle(tubeX[i]+1, extraObsY[i], bottomTube.getWidth(), extraObsHeight);
+					// create extraOb for every third tube
+				if (i % 3 == 0) {
+					batch.draw(extraObsAnimation.getFrame(), tubeX[i]+4, extraObsY[i], extraObsAnimation.getFrame().getRegionWidth(), extraObsAnimation.getFrame().getRegionHeight());
+					extraObsRectangle[i] = new Rectangle(tubeX[i]+4, extraObsY[i], bottomTube.getWidth(), extraObsAnimation.getFrame().getRegionHeight());
+				}
 
 				// Bottom Tube
 				batch.draw(bottomTube, tubeX[i], botTubeY);
@@ -310,8 +304,6 @@ public class FlappyTrump extends ApplicationAdapter {
 				// Top Tube
 				batch.draw(topTubeMedia, tubeX[i], topTubeY);
 				topTubeRectangles[i] = new Rectangle(tubeX[i], topTubeY, topTubeMedia.getWidth(), topTubeMedia.getHeight());
-
-
 
 
 //				extraObsRectangle[i] = new Rectangle(tubeX[i], botTubeY + bottomTube.getHeight(), bottomTube.getWidth(), extraObsTexture.getHeight());
@@ -342,7 +334,7 @@ public class FlappyTrump extends ApplicationAdapter {
 			}
 
 		} else if (gameState == 2 ){
-			batch.draw(gameover, halfScreenWidth - (gameover.getWidth() / 2), halfScreenHeight - (gameover.getHeight() / 8));
+			batch.draw(gameover, WIDTH/2 - (gameover.getWidth() / 2), HEIGHT/2 - (gameover.getHeight() / 8));
 			if (Gdx.input.justTouched()) {
 				velocity -= 25;
 				gameState = 1;
