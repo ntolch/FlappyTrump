@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.glutils.FileTextureData;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
@@ -41,11 +42,6 @@ public class FlappyTrump extends ApplicationAdapter {
 	Rectangle[] topTubeRectangles;
     Rectangle[] bottomTubeRectangles;
 
-    Texture extraObsTexture;
-    Animation extraObsAnimation;
-    Array<Texture> extraObsArray;
-	Rectangle[] extraObsRectangle;
-
 	float gap;
 	float tubeVelocity = 4;
 	int numberOfTubes = 4;
@@ -57,6 +53,20 @@ public class FlappyTrump extends ApplicationAdapter {
 
 	float extraObsVelocity = 4;
 	float[] extraObsY = new float[numberOfTubes];
+
+	int[] obsFrameCount = new int[numberOfTubes];
+	float[] obsCycleTime = new float[numberOfTubes];
+
+	// Get directory
+	FileHandle obstacleDir;
+    Texture[] extraObsTexture;
+    int numberOfObs;
+
+    Animation extraObsAnimation;
+    Array<Texture> extraObsArray;
+	Rectangle[] extraObsRectangle;
+
+	int extraObsHeight = 100;
 
 	int gameState = 0;
 
@@ -78,7 +88,7 @@ public class FlappyTrump extends ApplicationAdapter {
 			- Add textview "Tap to start game"
 			- reset positions of player and tubes
 
-	- Prevent player from going above the screen height
+	- Add pause and animation when game over
 	- Add extra obstacle (ie media) to either bottom of the topTube or top of bottomTube
 	- Add rotation of extra obstacle (ie China, Nancy Pelosi, Rosy O'Donnel)
 	- Bonus Round:
@@ -105,7 +115,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		gameover = new Texture("gameover.png");
 
-
 		player = new Texture("trump-smile-combo.png");
 		playerAnimation = new Animation(new TextureRegion(player), 9, .05f);
 		playerX = Gdx.graphics.getWidth() / 3;
@@ -122,20 +131,59 @@ public class FlappyTrump extends ApplicationAdapter {
 		topTubeRectangles = new Rectangle[numberOfTubes];
         bottomTubeRectangles = new Rectangle[numberOfTubes];
 
-//		extraObsTexture = new Texture("odonnell-combo-2.png");
-        extraObsAnimation = new Animation(new TextureRegion(extraObsTexture), 19, .05f);
+		rand = new Random();
+
+
+		// Get a random texture of obstacleDirectory
+//		extraObsTexture = new Texture(obstacleDir.list()[rand.nextInt(obstacleDir.list().length)]);
+//		extraObsTexture[i] = new Texture(obstacleDir.list()[rand.nextInt(obstacleDir.list().length)]);
+
+		obstacleDir = Gdx.files.internal("obstacles");
+//		numberOfObs = (int) obstacleDir.length();
+
+		extraObsTexture = new Texture[numberOfTubes];
+
+		for (int i = 0; i < numberOfTubes; i++) {
+			extraObsTexture[i] = new Texture(obstacleDir.list()[i]);
+
+			// Select rand obstacle image from assets
+//					extraObsTexture[i] = new Texture(obstacleDir.list()[rand.nextInt(obstacleDir.list().length)]);
+//			extraObsTexture[i] = extraObsTexture[rand.nextInt(numberOfTubes)];
+			// Set animations specs depending on rand obstacle image selected
+			String path = ((FileTextureData)extraObsTexture[i].getTextureData()).getFileHandle().name();
+			switch (path) {
+				case "odonnell-combo-2.png":
+					obsFrameCount[i] = 19;
+					obsCycleTime[i] = .05f;
+					break;
+				case "media.png":
+					obsFrameCount[i] = 1;
+					obsCycleTime[i] = .05f;
+					break;
+				case "china.png":
+					obsFrameCount[i] = 1;
+					obsCycleTime[i] = .04f;
+					break;
+				case "pelosi.png":
+					obsFrameCount[i] = 1;
+					obsCycleTime[i] = .05f;
+					break;
+				default:
+					obsFrameCount[i] = 1;
+					obsCycleTime[i] = .06f;
+					break;
+			}
+			extraObsAnimation = new Animation(new TextureRegion(extraObsTexture[i]), obsFrameCount[i], obsCycleTime[i]);
+		}
+
+
+//        extraObsAnimation = new Animation(new TextureRegion(extraObsTexture[0]), 19, .05f);
         extraObsRectangle = new Rectangle[numberOfTubes];
         extraObsArray = new Array<>();
-
-		// Get directory
-		FileHandle dir = Gdx.files.internal("obstacles");
-		// Get a random texture of dir
-		extraObsTexture = new Texture(dir.list()[rand.nextInt(dir.list().length)]);
 
 		distanceBetweenTubes = WIDTH;
 
 		////
-		rand = new Random();
 
 		startGame();
 	}
@@ -173,25 +221,61 @@ public class FlappyTrump extends ApplicationAdapter {
 			// Tube Sprite
 			// reposition tube as it goes off screen
 			for (int i = 0; i < numberOfTubes; i++) {
-				if (tubeX[i] < -topTubeMedia.getWidth()) {
+
+				if (tubeX[i] < -topTubeMedia.getWidth()) {  // if tube goes off the screen...
 					tubeX[i] += numberOfTubes * distanceBetweenTubes;
-					tubeYOffset[i] = rand.nextFloat() * HEIGHT - gap - extraObsTexture.getHeight();
+					tubeYOffset[i] = rand.nextFloat() * HEIGHT - gap - extraObsAnimation.getFrame().getRegionHeight();
 
 					tubeYFluctuation[i] = rand.nextInt(200);
-
 
 					if (tubeYOffset[i] < -200) {
 						tubeYOffset[i] = rand.nextInt(100) + 10;
 					} else if (tubeYOffset[i] > 50) {
-						tubeYOffset[i] -= 70 + extraObsTexture.getHeight();
+						tubeYOffset[i] -= 70 + extraObsTexture[i].getHeight();
 					} else if (tubeYOffset[i] > 100) {
-						tubeYOffset[i] -= 200 + extraObsTexture.getHeight();
+						tubeYOffset[i] -= 200 + extraObsTexture[i].getHeight();
 					} else if (tubeYOffset[i] > 300) {
-						tubeYOffset[i] -= 400 + extraObsTexture.getHeight();
+						tubeYOffset[i] -= 400 + extraObsTexture[i].getHeight();
 					}
+
 
 //					System.out.println("\n\nTube: " + i + "Tube Offset: " + tubeYOffset[i]);
 //					System.out.println("Fluctuation: " + tubeYFluctuation[i]);
+
+
+
+					// Select rand obstacle image from assets
+					extraObsTexture[i] = extraObsTexture[rand.nextInt(numberOfTubes)];
+					// Set animations specs depending on rand obstacle image selected
+					String path = ((FileTextureData)extraObsTexture[i].getTextureData()).getFileHandle().name();
+					switch (path) {
+						case "odonnell-combo-2.png":
+							obsFrameCount[i] = 19;
+							obsCycleTime[i] = .05f;
+							break;
+						case "media.png":
+							obsFrameCount[i] = 1;
+							obsCycleTime[i] = .05f;
+							break;
+						case "china.png":
+							obsFrameCount[i] = 1;
+							obsCycleTime[i] = .04f;
+							break;
+						case "pelosi.png":
+							obsFrameCount[i] = 1;
+							obsCycleTime[i] = .05f;
+							break;
+						default:
+							obsFrameCount[i] = 1;
+							obsCycleTime[i] = .06f;
+							break;
+					}
+					System.out.println("PATH: " + path);
+					System.out.println("FRAME COUNT: " + obsFrameCount[i]);
+
+					extraObsAnimation = new Animation(new TextureRegion(extraObsTexture[i]), obsFrameCount[i], obsCycleTime[i]);
+
+
 
 				} else {
 					// Move tubes to the left
@@ -200,26 +284,24 @@ public class FlappyTrump extends ApplicationAdapter {
 					extraObsY[i] += extraObsVelocity;
 				}
 
-				// Move extra obstacle up through bottom pipe
+				// Move extra obstacle up through bottom of screen when it reaches top of screen
 				for (int x = 0; x < numberOfTubes; x++) {
-					if (extraObsY[i] > HEIGHT) {
-						extraObsY[i] -= HEIGHT;
+					if (extraObsY[x] > HEIGHT) {  // when obstacle reach top of screen...
+						extraObsY[x] -= HEIGHT;
+
 					}
 				}
 
-				System.out.println("\n" + extraObsY[i]);
-
-
 				// Tube Position Variables
-				float topTubeY = HEIGHT/2 + gap/2 + extraObsTexture.getHeight()/2 + tubeYOffset[i] + tubeYFluctuation[i];
+				float topTubeY = HEIGHT/2 + gap/2 + extraObsHeight/2 + tubeYOffset[i] + tubeYFluctuation[i];
 				if (topTubeY > HEIGHT) topTubeY -= 120;
 
-				float botTubeY = HEIGHT/2 - gap/2 - extraObsTexture.getHeight()/2 - bottomTube.getHeight() + tubeYOffset[i];
-				if (botTubeY + bottomTube.getHeight() - extraObsTexture.getHeight() < extraObsTexture.getHeight()*2) botTubeY += extraObsTexture.getHeight();
+				float botTubeY = HEIGHT/2 - gap/2 - extraObsHeight/2 - bottomTube.getHeight() + tubeYOffset[i];
+				if (botTubeY + bottomTube.getHeight() - extraObsHeight < extraObsHeight*2) botTubeY += extraObsHeight;
 
 				// Extra Obs
-				batch.draw(extraObsAnimation.getFrame(), tubeX[i]+1, extraObsY[i], extraObsTexture.getWidth() / 19, extraObsTexture.getHeight());
-				extraObsRectangle[i] = new Rectangle(tubeX[i]+1, extraObsY[i], bottomTube.getWidth(), extraObsTexture.getHeight());
+				batch.draw(extraObsAnimation.getFrame(), tubeX[i]+1, extraObsY[i], extraObsAnimation.getFrame().getRegionWidth(), extraObsHeight);
+				extraObsRectangle[i] = new Rectangle(tubeX[i]+1, extraObsY[i], bottomTube.getWidth(), extraObsHeight);
 
 				// Bottom Tube
 				batch.draw(bottomTube, tubeX[i], botTubeY);
