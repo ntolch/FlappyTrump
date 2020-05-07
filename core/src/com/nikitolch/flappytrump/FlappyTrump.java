@@ -13,90 +13,9 @@ import com.badlogic.gdx.graphics.glutils.FileTextureData;
 import com.badlogic.gdx.math.Circle;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Rectangle;
-import com.badlogic.gdx.scenes.scene2d.Action;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.actions.Actions;
-import com.badlogic.gdx.scenes.scene2d.actions.DelayAction;
-import com.badlogic.gdx.scenes.scene2d.actions.MoveToAction;
-import com.badlogic.gdx.scenes.scene2d.actions.SequenceAction;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.Timer;
-import com.badlogic.gdx.utils.Timer.Task;
 
 import java.util.Random;
-
-public class FlappyTrump extends ApplicationAdapter {
-	public static float HEIGHT;
-	public static float WIDTH;
-
-	SpriteBatch batch;
-//	ShapeRenderer shapeRenderer;
-	Texture background;
-	Texture gameover;
-
-	Boolean playSound = true;
-	Sound iDontTakeResponsibility;
-	float delay = .5f;
-	long id;
-	Texture responsibilityTexture;
-	Animation responsibilityAnimation;
-
-
-	Boolean playedSound;
-	Sound obstacleSound;
-	Sound nastyQuestion;
-
-
-	float gravity = 1.3f;
-
-	Texture player;
-	Circle playerCircle;
-	float playerY;
-	float playerX;
-	Animation playerAnimation;
-	float velocity = 0;
-	////
-
-    // Tube Sprite
-	Texture topTubeMedia;
-	Texture bottomTube;
-	Rectangle[] topTubeRectangles;
-    Rectangle[] bottomTubeRectangles;
-
-	float gap;
-	float tubeVelocity = 4;
-	int numberOfTubes = 4;
-	int scoringTube = 0;
-	float[] tubeX = new float[numberOfTubes];
-	float[] tubeYOffset = new float[numberOfTubes];
-	float distanceBetweenTubes;
-    ////
-
-	float extraObsVelocity = 4;
-	float[] extraObsY = new float[numberOfTubes];
-
-	int[] obsFrameCount = new int[numberOfTubes];
-	float[] obsCycleTime = new float[numberOfTubes];
-
-	// Get directory
-	FileHandle obstacleDir;
-    Texture[] extraObsTexture;
-
-    Animation extraObsAnimation;
-    Array<Texture> extraObsArray;
-	Rectangle[] extraObsRectangle;
-
-	int extraObsHeight = 100;
-
-	int gameState = 0;
-
-	BitmapFont font;
-
-	int score = 0;
-
-	float[] tubeYFluctuation = new float[numberOfTubes];
-	Random rand;
-
 
 	/* TODO:
 	- Make face #2 (when screen is touched) display little longer after the screen tap
@@ -125,11 +44,81 @@ public class FlappyTrump extends ApplicationAdapter {
 		- stop extra obstacle from changing image after showing (still happening?)
 	 */
 
+public class FlappyTrump extends ApplicationAdapter {
+	public static float HEIGHT;
+	public static float WIDTH;
+
+	SpriteBatch batch;
+	Texture background;
+	Texture gameover;
+
+	Boolean playSound = false;
+	Sound iDontTakeResponsibility;
+	float delay = .5f;
+	long id;
+	Texture responsibilityTexture;
+	Animation responsibilityAnimation;
+
+	float gravity = 1.3f;
+
+	Texture player;
+	Circle playerCircle;
+	float playerY;
+	float playerX;
+	Animation playerAnimation;
+	float velocity = 0;
+	////
+
+    // Tube Sprite
+	Texture topTubeMedia;
+	Texture bottomTube;
+	Rectangle[] topTubeRectangles;
+    Rectangle[] bottomTubeRectangles;
+
+	float gap;
+	float tubeVelocity = 4;
+	int numberOfTubes = 4;
+	int scoringTube = 0;
+	float[] tubeX = new float[numberOfTubes];
+	float[] tubeYOffset = new float[numberOfTubes];
+	float distanceBetweenTubes;
+    ////
+
+	int numberOfObs;
+	float extraObsVelocity = 4;
+	float[] extraObsY;
+	// Will need to change to ArrayList if I want to be able to change number of obstacles (independent of number of tubes)
+	int[] obsFrameCount;
+	float[] obsCycleTime;
+
+	// Get directory
+	FileHandle obstacleDir;
+    Texture[] extraObsTexture;
+    Animation extraObsAnimation;
+    Array<Texture> extraObsArray;
+	Rectangle[] extraObsRectangle;
+
+	// Have array of booleans to track whether sound
+	// has been played for current extra obstacle;
+	// reset boolean value after current obs regenerates
+	boolean[] obsSoundIsPlayed;
+	Sound obstacleSound;
+	Sound nastyQuestionSound;
+	Sound chinaSound;
+
+	int gameState = 0;
+
+	BitmapFont font;
+
+	int score = 0;
+
+	float[] tubeYFluctuation = new float[numberOfTubes];
+	Random rand;
+
 	@Override
 	public void create () {
 		batch = new SpriteBatch();
-//		shapeRenderer = new ShapeRenderer();
-		// Player Sprite
+
 		HEIGHT = Gdx.graphics.getHeight();
 		WIDTH = Gdx.graphics.getWidth();
 
@@ -137,8 +126,8 @@ public class FlappyTrump extends ApplicationAdapter {
 		responsibilityTexture = new Texture("responsiblity-gif.png");
 		responsibilityAnimation = new Animation(new TextureRegion(responsibilityTexture), 23, 9f);
 
-		nastyQuestion = Gdx.audio.newSound(Gdx.files.internal("sound/nasty-question.mp3"));
-		playedSound = false;
+		nastyQuestionSound = Gdx.audio.newSound(Gdx.files.internal("sound/nasty-question.mp3"));
+		chinaSound = Gdx.audio.newSound(Gdx.files.internal("sound/china-yell.mp3"));
 
 		font = new BitmapFont();
 		font.setColor(Color.WHITE);
@@ -165,39 +154,44 @@ public class FlappyTrump extends ApplicationAdapter {
 		rand = new Random();
 
 
-		// Get a random texture of obstacleDirectory
-//		extraObsTexture = new Texture(obstacleDir.list()[rand.nextInt(obstacleDir.list().length)]);
-//		extraObsTexture[i] = new Texture(obstacleDir.list()[rand.nextInt(obstacleDir.list().length)]);
-
 		obstacleDir = Gdx.files.internal("obstacles");
-//		numberOfObs = (int) obstacleDir.length();
+		numberOfObs = obstacleDir.list().length;
+		extraObsY = new float[numberOfObs];
+		obsFrameCount = new int[numberOfObs];
+		obsCycleTime = new float[numberOfObs];
+		obsSoundIsPlayed = new boolean[numberOfObs];
 
 		extraObsTexture = new Texture[numberOfTubes];
 
-		for (int i = 0; i < numberOfTubes; i++) {
-			extraObsTexture[i] = new Texture(obstacleDir.list()[i]);
+		// Get a random texture of obstacleDirectory
+		for (int i = 0; i < numberOfObs; i++) {
+			extraObsTexture[i] = new Texture(obstacleDir.list()[rand.nextInt(numberOfObs)]);
 
-			// Select rand obstacle image from assets
-//					extraObsTexture[i] = new Texture(obstacleDir.list()[rand.nextInt(obstacleDir.list().length)]);
-//			extraObsTexture[i] = extraObsTexture[rand.nextInt(numberOfTubes)];
 			// Set animations specs depending on rand obstacle image selected
 			String path = ((FileTextureData)extraObsTexture[i].getTextureData()).getFileHandle().name();
 			switch (path) {
 				case "odonnell-combo-2.png":
+					obsSoundIsPlayed[i] = true;
 					obsFrameCount[i] = 19;
 					obsCycleTime[i] = .05f;
 					break;
 				case "media.png":
+					obsSoundIsPlayed[i] = true;
 					obsFrameCount[i] = 1;
 					obsCycleTime[i] = .05f;
+					obstacleSound = nastyQuestionSound;
 					break;
 				case "china.png":
+					obsSoundIsPlayed[i] = true;
 					obsFrameCount[i] = 1;
 					obsCycleTime[i] = .04f;
+					chinaSound = nastyQuestionSound;
 					break;
 				case "pelosi.png":
+					obsSoundIsPlayed[i] = true;
 					obsFrameCount[i] = 1;
 					obsCycleTime[i] = .05f;
+					obstacleSound = nastyQuestionSound;
 					break;
 				default:
 					obsFrameCount[i] = 1;
@@ -222,6 +216,7 @@ public class FlappyTrump extends ApplicationAdapter {
 	public void startGame() {
 		// Player Sprite
 		playerY = HEIGHT/2 - (player.getHeight() / 2) - (gameover.getHeight() / 3);
+		playerX = Gdx.graphics.getWidth() / 3;
 		//
 
         // Tube Sprite
@@ -238,6 +233,8 @@ public class FlappyTrump extends ApplicationAdapter {
 
 	@Override
 	public void render () {
+//		stage.act(Gdx.graphics.getDeltaTime());
+//		stage.draw();
 		batch.begin();
 		batch.draw(background, 0, 0, WIDTH, HEIGHT);
 
@@ -249,7 +246,6 @@ public class FlappyTrump extends ApplicationAdapter {
 				velocity -= 25;
 			}
 
-
 			// Tube Sprite
 			// reposition tube as it goes off screen
 			for (int i = 0; i < numberOfTubes; i++) {
@@ -260,7 +256,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 					tubeYFluctuation[i] = rand.nextInt(200);
 
-
 					if (tubeYOffset[i] < -200) {
 						tubeYOffset[i] = rand.nextInt(100) + 10;
 					} else if (tubeYOffset[i] > 100) {
@@ -269,7 +264,6 @@ public class FlappyTrump extends ApplicationAdapter {
 						tubeYOffset[i] -= 400 + extraObsTexture[i].getHeight();
 					}
 
-
 					if (i % 3 == 0) {
 						// Select rand obstacle image from assets
 						extraObsTexture[i] = extraObsTexture[rand.nextInt(numberOfTubes)];
@@ -277,21 +271,28 @@ public class FlappyTrump extends ApplicationAdapter {
 						String path = ((FileTextureData) extraObsTexture[i].getTextureData()).getFileHandle().name();
 						switch (path) {
 							case "odonnell-combo-2.png":
+								obsSoundIsPlayed[i] = true;
 								obsFrameCount[i] = 19;
 								obsCycleTime[i] = .05f;
+								obstacleSound = nastyQuestionSound;
 								break;
 							case "media.png":
+								obsSoundIsPlayed[i] = true;
 								obsFrameCount[i] = 1;
 								obsCycleTime[i] = .05f;
-								obstacleSound = nastyQuestion;
+								obstacleSound = nastyQuestionSound;
 								break;
 							case "china.png":
+								obsSoundIsPlayed[i] = true;
 								obsFrameCount[i] = 1;
 								obsCycleTime[i] = .04f;
+								obstacleSound = chinaSound;
 								break;
 							case "pelosi.png":
+								obsSoundIsPlayed[i] = true;
 								obsFrameCount[i] = 1;
 								obsCycleTime[i] = .05f;
+								obstacleSound = chinaSound;
 								break;
 							default:
 								obsFrameCount[i] = 1;
@@ -300,7 +301,6 @@ public class FlappyTrump extends ApplicationAdapter {
 						}
 						extraObsAnimation = new Animation(new TextureRegion(extraObsTexture[i]), obsFrameCount[i], obsCycleTime[i]);
 					}
-
 
 				} else {
 					tubeX[i] -= tubeVelocity;  // Move tubes to the left
@@ -312,7 +312,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 				}
 
-
 				// Move extra obstacle up through bottom of screen when it reaches top of screen
 				for (int x = 0; x < numberOfTubes; x++) {
 					if (extraObsY[x] > HEIGHT) {  // when obstacle reach top of screen, then reset to bottom of screen
@@ -323,7 +322,6 @@ public class FlappyTrump extends ApplicationAdapter {
 				// Tube Position Variables
 				float topTubeY = HEIGHT/2 + gap/2 + extraObsAnimation.getFrame().getRegionHeight()/2 + tubeYOffset[i] + tubeYFluctuation[i]/2;
 				if (topTubeY > HEIGHT) topTubeY -= extraObsAnimation.getFrame().getRegionHeight();
-
 				float botTubeY = HEIGHT/2 - gap/2 - extraObsAnimation.getFrame().getRegionHeight()/2 - bottomTube.getHeight() + tubeYOffset[i] + tubeYFluctuation[i]/2;
 				if (botTubeY + bottomTube.getHeight() - extraObsAnimation.getFrame().getRegionHeight() < extraObsAnimation.getFrame().getRegionHeight()*2) botTubeY += extraObsAnimation.getFrame().getRegionHeight();
 
@@ -334,27 +332,24 @@ public class FlappyTrump extends ApplicationAdapter {
 					extraObsRectangle[i] = new Rectangle(tubeX[i]+4, extraObsY[i], bottomTube.getWidth(), extraObsAnimation.getFrame().getRegionHeight());
 
 					// Play appropriate sound (if application) as player passes obstacle
-
 					if (extraObsY[i] > botTubeY + bottomTube.getHeight() && extraObsY[i] < topTubeY) { // if obstacle is visible (above bottom tube and under top tube)...
-						if (playerX > tubeX[i] && !playedSound && obstacleSound != null) {
-							obstacleSound.play(.5f);
-							playedSound = true;
+						//playerx = 360
+						if (playerX > tubeX[i] - 100 && obsSoundIsPlayed[i] == true && obstacleSound != null) {
+							obstacleSound.play();
+							obsSoundIsPlayed[i] = false;
+
 							// then delay and then make playedSound false again
 							//maybe make array of booleans so each obstacle[i] can have a playedSound
 						}
 					}
 				}
 
-
-
 				// Bottom Tube
 				batch.draw(bottomTube, tubeX[i], botTubeY);
 				bottomTubeRectangles[i] = new Rectangle(tubeX[i], botTubeY, bottomTube.getWidth(), bottomTube.getHeight());
-
 				// Top Tube
 				batch.draw(topTubeMedia, tubeX[i], topTubeY);
 				topTubeRectangles[i] = new Rectangle(tubeX[i], topTubeY, topTubeMedia.getWidth(), topTubeMedia.getHeight());
-
 
 //				extraObsRectangle[i] = new Rectangle(tubeX[i], botTubeY + bottomTube.getHeight(), bottomTube.getWidth(), extraObsTexture.getHeight());
 			}
@@ -383,8 +378,10 @@ public class FlappyTrump extends ApplicationAdapter {
 				velocity -= 25;
 			}
 
-		} else if (gameState == 2 ){
+		} else if (gameState == 2){
+			playSound = true;
 			gameover();
+			startGame();
 		}
 
 		// Player Sprite
@@ -395,13 +392,11 @@ public class FlappyTrump extends ApplicationAdapter {
 		font.draw(batch, String.valueOf(score), 100, 200);
 		batch.end();
 
-
         // Tube Sprite
 		for (int i = 0; i < numberOfTubes; i++) {
 			if (Intersector.overlaps(playerCircle, topTubeRectangles[i]) ||
 					Intersector.overlaps(playerCircle, bottomTubeRectangles[i]) ||
 					Intersector.overlaps(playerCircle, extraObsRectangle[i])) {
-//				startGame();
 				gameState = 2;
 			}
 		}
@@ -411,9 +406,6 @@ public class FlappyTrump extends ApplicationAdapter {
 
 		// Player Sprite
 		playerAnimation.update(2.5f);
-		//
-
-
 	}
 
 	private void gameover() {
@@ -422,28 +414,30 @@ public class FlappyTrump extends ApplicationAdapter {
 		// Player animation after delay
 		// if high score has been reach, play Trump soundbite about being the best maybe in history
 		// or/else play Trump soundbite about it not being being his fault
-		if (Gdx.input.justTouched()) {
-			velocity -= 25;
-			gameState = 0;
-			startGame();
-			score = 0;
-			scoringTube = 0;
-		}
+//		if (Gdx.input.justTouched()) {
+//			velocity -= 25;
+//			gameState = 0;
+//			startGame();
+//			score = 0;
+//			scoringTube = 0;
+//		}
 
 
 		// Look into gdx Actors & Action classes to use delayAction when game over
 
 		if (playSound) {
-//			playerX -= WIDTH;
-			id = iDontTakeResponsibility.play(.9f);
+			playerX -= WIDTH;
+			id = iDontTakeResponsibility.play();
 			iDontTakeResponsibility.setLooping(id, false);
 
-
-			playSound = false;
-			batch.draw(responsibilityAnimation.getFrame(), WIDTH/2-responsibilityAnimation.getFrame().getRegionWidth()/2, HEIGHT/2-responsibilityTexture.getHeight()/2, responsibilityAnimation.getFrame().getRegionWidth(), responsibilityAnimation.getFrame().getRegionHeight());
-
+			batch.draw(responsibilityAnimation.getFrame(),
+					WIDTH/2-responsibilityAnimation.getFrame().getRegionWidth()/2,
+					HEIGHT/2-responsibilityTexture.getHeight()/2,
+					responsibilityAnimation.getFrame().getRegionWidth(),
+					responsibilityAnimation.getFrame().getRegionHeight());
 
 			responsibilityAnimation.update(.08f);
+			playSound = false;
 		}
 
 //		responsibilityTexture.dispose();
